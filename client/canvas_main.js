@@ -22,24 +22,23 @@
     window.addEventListener('resize', resizeCanvas, false);
 
     function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = 1000;
+        canvas.height = 500;
         redraw();
     }
-
-    // var clients = {};
-    // var commonBall = { x, y, radius };
 
     function redraw(x, y, width, height) {
         ctx.clearRect(x, y, width, height);
     }
 
+
     // function redrawAll() {
     //     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // }
 
-    function drawPlatform(x, y, width, height) {
+    // setInterval(redrawAll, 1000);
 
+    function drawPlatform(x, y, width, height) {
         ctx.beginPath();
         ctx.rect(x, y, width, height);
         ctx.fillStyle = "black";
@@ -48,9 +47,6 @@
     }
 
     function drawBall(x, y, radius) {
-        // commonBall.x = x;
-        // commonBall.y = y;
-        // commonBall.radius = radius;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = "black";
@@ -66,6 +62,7 @@
     socket.on('state', function(players) {
         for (var id in players) {
             var player = players[id];
+            console.log("Drawing player " + id);
             redraw(player.lastx, player.lasty, player.width, player.height);
             drawPlatform(player.x, player.y, player.width, player.height);
         }

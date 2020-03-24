@@ -36,7 +36,7 @@ io.on('connection', function(socket) {
             ball.lastx = ball.x;
             ball.lasty = ball.y;
             ball.speed = 3;
-            ball.dx = ball.speed;
+            ball.dx = ball.speed * 3;
             ball.dy = ball.speed;
             ball.radius = 10;
             setInterval(moveBall, 10);
@@ -51,6 +51,7 @@ io.on('connection', function(socket) {
         player.y = data.y;
         player.width = 10;
         player.height = 100;
+        io.sockets.emit('state', players);
     });
 });
 
@@ -77,7 +78,6 @@ function collisionDetection() {
             ball.dy = -ball.dy;
         }
     }
-
 }
 
 function changeX() {
@@ -92,9 +92,6 @@ function changeY() {
     }
 }
 
-setInterval(function() {
-    io.sockets.emit('state', players);
-}, 1000 / 60);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////\\\\\\\\\\\\\\\
 
