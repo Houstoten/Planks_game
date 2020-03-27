@@ -12,6 +12,7 @@ npm install uuid
 
 
 Do to run server
+
 node server.js
 
 Then go to http://localhost:5000/
