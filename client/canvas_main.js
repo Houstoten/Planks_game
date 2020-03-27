@@ -1,5 +1,7 @@
 (function() {
     var canvas = document.getElementById("main_canvas");
+    var scoreDisplay = document.getElementById("score");
+    scoreDisplay.innerHTML = 0 + " - " + 0;
     var ctx = canvas.getContext("2d");
     var socket = io();
 
@@ -66,6 +68,10 @@
             redraw(player.lastx, player.lasty, player.width, player.height);
             drawPlatform(player.x, player.y, player.width, player.height, player.color);
         }
+    });
+
+    socket.on('score', function(score) {
+        scoreDisplay.innerHTML = score.left + " - " + score.right;
     });
 
 })();

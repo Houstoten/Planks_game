@@ -9,6 +9,7 @@ class Room {
         this.field = new Field(width, height);
         this.leftPlayerFlag = false;
         this.rightPlayerFlag = false;
+        this.gameEnded == true;
     }
 
     updateObject() {
@@ -38,19 +39,19 @@ class Room {
     }
 
     addLeftPlayer(socket) {
-        this.leftPlayer = new Player(this.field.width / 3, this.field.height / 2, 10, 100, socket);
-        this.leftPlayer.setcolor("blue");
-        this.players[socket.id] = this.leftPlayer;
+        this.players[socket.id] = new Player(this.field.width / 3, this.field.height / 2, 10, 100, socket, 10, this.field.width / 2);
+        this.players[socket.id].setcolor("blue");
+        this.leftPlayer = socket.id;
         this.leftPlayerFlag = true;
-        console.log("Created Left Player " + socket.id + " in " + this.roomid);
+        console.log("Created Left Player " + this.leftPlayer + " in " + this.roomid);
     }
 
     addRightPlayer(socket) {
-        this.rightPlayer = new Player(this.field.width * 2 / 3, this.field.height / 2, 10, 100, socket);
-        this.rightPlayer.setcolor("red");
-        this.players[socket.id] = this.rightPlayer;
+        this.players[socket.id] = new Player(this.field.width * 2 / 3, this.field.height / 2, 10, 100, socket, 10, -this.field.width / 2);
+        this.players[socket.id].setcolor("red");
+        this.rightPlayer = socket.id;
         this.rightPlayerFlag = true;
-        console.log("Created Right Player " + socket.id + " in " + this.roomid);
+        console.log("Created Right Player " + this.rightPlayer + " in " + this.roomid);
     }
 
     createBall() {
@@ -58,6 +59,7 @@ class Room {
     }
 
     startGame() {
+        this.gameEnded = false;
         this.createBall();
         this.moveBall();
     }
@@ -76,6 +78,15 @@ class Room {
         //console.log(this.players);
     }
 
+    updateScoreForPlayers() {
+        for (var id in this.players) {
+            this.players[id].socket.emit('score', {
+                left: this.players[this.leftPlayer].score,
+                right: this.players[this.rightPlayer].score
+            });
+        }
+    }
+
     moveBall() {
         this.collisionDetection();
         //console.log("hi");
@@ -86,12 +97,33 @@ class Room {
         this.ball.x += this.ball.dx;
         this.ball.y += this.ball.dy;
         this.updateBallForPlayers();
-        setTimeout(this.moveBall.bind(this), 10);
+        if (!this.gameEnded) {
+            setTimeout(this.moveBall.bind(this), 10);
+        } else {
+            if (Math.max(this.players[this.leftPlayer].score, this.players[this.rightPlayer].score) == this.players[this.leftPlayer].score) {
+                var winner = this.players[this.leftPlayer].color;
+            } else {
+                var winner = this.players[this.rightPlayer].color;
+            }
+            console.log("Game ended in room " + this.roomid + " .Winner is " + winner + " player.");
+        }
     }
 
     changeX() {
         if (this.ball.x + this.ball.dx > this.field.width - this.ball.radius || this.ball.x + this.ball.dx < this.ball.radius) {
+
+            if (this.ball.x + this.ball.dx > this.field.width - this.ball.radius) {
+                this.gameEnded = this.players[this.leftPlayer].increaseScoreAndCheckWinner();
+
+            } else {
+                if (this.ball.x + this.ball.dx < this.ball.radius) {
+                    this.gameEnded = this.players[this.rightPlayer].increaseScoreAndCheckWinner();
+
+                }
+            }
             this.ball.dx = -this.ball.dx;
+            this.updateScoreForPlayers();
+            //console.log("New score in " + this.roomid + " - " + this.players[this.leftPlayer].score + " : " + this.players[this.rightPlayer].score);
         }
     }
 
@@ -104,13 +136,13 @@ class Room {
     collisionDetection() {
         for (var id in this.players) {
             var player = this.players[id];
-            if (this.ball.x + this.ball.dx - this.ball.radius <= player.x + player.width && this.ball.x + this.ball.dx + this.ball.radius >= player.x &&
-                this.ball.y + this.ball.dy <= player.y + player.height && this.ball.y + this.ball.dy + this.ball.radius >= player.y) {
+            if (this.ball.x + this.ball.dx - this.ball.radius < player.x + player.width && this.ball.x + this.ball.dx + this.ball.radius > player.x &&
+                this.ball.y + this.ball.dy < player.y + player.height && this.ball.y + this.ball.dy + this.ball.radius > player.y) {
                 this.ball.color = player.color;
                 this.ball.dx = -this.ball.dx;
             }
-            if (this.ball.y + this.ball.dy - this.ball.radius <= player.y + player.height && this.ball.y + this.ball.dy + this.ball.radius >= player.y &&
-                this.ball.x + this.ball.dx <= player.x + player.width && this.ball.x + this.ball.dx + this.ball.radius >= player.x) {
+            if (this.ball.y + this.ball.dy - this.ball.radius < player.y + player.height && this.ball.y + this.ball.dy + this.ball.radius > player.y &&
+                this.ball.x + this.ball.dx < player.x + player.width && this.ball.x + this.ball.dx + this.ball.radius > player.x) {
                 this.ball.color = player.color;
                 this.ball.dy = -this.ball.dy;
             }

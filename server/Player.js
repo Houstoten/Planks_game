@@ -1,5 +1,5 @@
 class Player {
-    constructor(x, y, width, height, socket) {
+    constructor(x, y, width, height, socket, maxScore, maxX) {
         this.x = x;
         this.y = y;
         this.lastx = x;
@@ -7,6 +7,9 @@ class Player {
         this.width = width;
         this.height = height;
         this.socket = socket;
+        this.score = 0;
+        this.maxScore = maxScore;
+        this.maxX = maxX;
         console.log(socket.id + " player constructed");
     }
     setcolor(color) {
@@ -14,10 +17,22 @@ class Player {
     }
     moveTo(x, y) {
         // console.log("Player " + this.socket.id + " moved ");
-        this.lastx = this.x;
         this.lasty = this.y;
-        this.x = x;
         this.y = y;
+        this.lastx = this.x;
+
+        if (this.maxX >= 0) {
+            if (x >= this.maxX) {
+                return;
+            }
+        } else {
+            if (x <= -this.maxX) {
+                return;
+            }
+        }
+
+        this.x = x;
+
     }
     objectToSend() {
         var cc = {
@@ -30,6 +45,15 @@ class Player {
             color: this.color
         }
         return cc;
+    }
+
+    increaseScoreAndCheckWinner() {
+        this.score++;
+        if (this.score >= this.maxScore) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 module.exports = Player
