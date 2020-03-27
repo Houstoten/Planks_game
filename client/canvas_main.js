@@ -38,25 +38,25 @@
 
     // setInterval(redrawAll, 1000);
 
-    function drawPlatform(x, y, width, height) {
+    function drawPlatform(x, y, width, height, color) {
         ctx.beginPath();
         ctx.rect(x, y, width, height);
-        ctx.fillStyle = "black";
+        ctx.fillStyle = color;
         ctx.fill();
         ctx.closePath();
     }
 
-    function drawBall(x, y, radius) {
+    function drawBall(x, y, radius, color) {
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = "black";
+        ctx.fillStyle = color;
         ctx.fill();
         ctx.closePath();
     }
 
     socket.on('ball', function(ball) {
         redraw(ball.lastx - ball.radius, ball.lasty - ball.radius, ball.radius * 2, ball.radius * 2);
-        drawBall(ball.x, ball.y, ball.radius);
+        drawBall(ball.x, ball.y, ball.radius, ball.color);
     });
 
     socket.on('state', function(players) {
@@ -64,7 +64,7 @@
             var player = players[id];
             console.log("Drawing player " + id);
             redraw(player.lastx, player.lasty, player.width, player.height);
-            drawPlatform(player.x, player.y, player.width, player.height);
+            drawPlatform(player.x, player.y, player.width, player.height, player.color);
         }
     });
 
