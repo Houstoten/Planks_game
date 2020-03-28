@@ -7,19 +7,61 @@
     <title>Planks_game</title>
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/jquery.fancybox.min.css">
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 
 <body>
+
     <div class="container">
         <canvas id="main_canvas"></canvas>
-        <div class="info_container">
-            <h2>Score</h2>
-            <h3 id="score">-</h3>
+        <div class="container">
+            <table class="info_table" border="0" cellpadding="10" cellspacing="0">
+                <tr>
+                    <td>
+                        <h3>Press Space to pause/unpause</h3>
+                    </td>
+                    <td align="center">
+                        <h2>Score</h2>
+                        <h3 id="score">-</h3>
+                    </td>
+                    <td>
+                        <h2>Room id</h2>
+                        <h3 id="roomId">-</h3>
+                    </td>
+                    <td>
+                        <h2 id="playerOne">-</h2>
+                    </td>
+                    <td>
+                        <a id="change_game_mode" data-fancybox data-src="#choose_mode" href="javascript:;">Change Game Mode</a>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 
-    <!-- <script src=”http://code.jquery.com/jquery-latest.min.js "></script> -->
-    <script src="client/canvas_main.js"></script>
+    <form id="choose_mode">
+        <div class="form_title">
+            Choose mode here
+        </div>
+
+        <table class="mode_choose_container" cellpadding="10">
+            <tr>
+                <td align="center">
+                    <button id="quick_match">New quick match</button>
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    <button id="join_to_room">Join to existing room</button>
+                    <input id="new_room_id">
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="client/jquery.fancybox.min.js"></script>
+    <script src="client/canvas_main.js "></script>
 
 </body>

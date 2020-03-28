@@ -9,7 +9,20 @@ class Room {
         this.field = new Field(width, height);
         this.leftPlayerFlag = false;
         this.rightPlayerFlag = false;
-        this.gameEnded == true;
+        this.gameEnded = true;
+        this.paused = false;
+    }
+
+    changePause() {
+        if (this.paused) {
+            this.paused = false;
+            if (this.fullFlag() && !this.gameEnded) {
+                this.moveBall();
+            }
+        } else {
+            this.paused = true;
+        }
+        console.log("room " + this.roomid + " paused " + this.paused);
     }
 
     updateObject() {
@@ -44,6 +57,10 @@ class Room {
         this.leftPlayer = socket.id;
         this.leftPlayerFlag = true;
         console.log("Created Left Player " + this.leftPlayer + " in " + this.roomid);
+        socket.emit('playerInRoom', {
+            color: this.players[this.leftPlayer].color,
+            id: this.roomid
+        });
     }
 
     addRightPlayer(socket) {
@@ -52,6 +69,10 @@ class Room {
         this.rightPlayer = socket.id;
         this.rightPlayerFlag = true;
         console.log("Created Right Player " + this.rightPlayer + " in " + this.roomid);
+        socket.emit('playerInRoom', {
+            color: this.players[this.rightPlayer].color,
+            id: this.roomid
+        });
     }
 
     createBall() {
@@ -97,15 +118,17 @@ class Room {
         this.ball.x += this.ball.dx;
         this.ball.y += this.ball.dy;
         this.updateBallForPlayers();
-        if (!this.gameEnded) {
+        if (!this.gameEnded && !this.paused) {
             setTimeout(this.moveBall.bind(this), 10);
         } else {
-            if (Math.max(this.players[this.leftPlayer].score, this.players[this.rightPlayer].score) == this.players[this.leftPlayer].score) {
-                var winner = this.players[this.leftPlayer].color;
-            } else {
-                var winner = this.players[this.rightPlayer].color;
+            if (this.gameEnded) {
+                if (Math.max(this.players[this.leftPlayer].score, this.players[this.rightPlayer].score) == this.players[this.leftPlayer].score) {
+                    var winner = this.players[this.leftPlayer].color;
+                } else {
+                    var winner = this.players[this.rightPlayer].color;
+                }
+                console.log("Game ended in room " + this.roomid + " .Winner is " + winner + " player.");
             }
-            console.log("Game ended in room " + this.roomid + " .Winner is " + winner + " player.");
         }
     }
 

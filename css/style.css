@@ -6,7 +6,6 @@ html,
 body {
     width: 100%;
     height: 100%;
-    cursor: none;
     display: block;
 }
 
@@ -15,7 +14,16 @@ body {
     text-align: center;
 }
 
+.info_table {
+    display: inline;
+}
+
+#choose_mode {
+    display: none;
+}
+
 #main_canvas {
+    cursor: none;
     display: inline;
     background-color: rgb(138, 138, 138);
 }

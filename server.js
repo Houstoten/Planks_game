@@ -48,10 +48,17 @@ io.on('connection', function(socket) {
 
 
     });
+
     socket.on('movement', function(data) {
         if (playerToRoom.has(socket.id)) {
             rooms[playerToRoom.get(socket.id)].playerMoved(socket.id, data.x, data.y);
         }
 
+    });
+
+    socket.on('pause', function() {
+        if (playerToRoom.has(socket.id)) {
+            rooms[playerToRoom.get(socket.id)].changePause();
+        }
     });
 });

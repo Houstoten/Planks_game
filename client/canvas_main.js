@@ -1,15 +1,30 @@
 (function() {
     var canvas = document.getElementById("main_canvas");
     var scoreDisplay = document.getElementById("score");
+    var roomIdDisplay = document.getElementById("roomId");
+    var playerOneDisplay = document.getElementById("playerOne");
     scoreDisplay.innerHTML = 0 + " - " + 0;
     var ctx = canvas.getContext("2d");
     var socket = io();
 
+    // $('#change_game_mode').click(function() {
+    //     $.fancybox([
+    //         { href: '#choose_mode' }
+    //     ]);
+    // });
+
     socket.emit('new player');
 
-    document.addEventListener("mousemove", mouseMoveHandler, false);
 
+    document.addEventListener("mousemove", mouseMoveHandler, false);
+    document.addEventListener("keydown", pausePressHandler, false);
     var movement = {};
+
+    function pausePressHandler(e) {
+        if (e.keyCode == 32) {
+            socket.emit('pause');
+        }
+    }
 
     function mouseMoveHandler(e) {
 
@@ -74,4 +89,9 @@
         scoreDisplay.innerHTML = score.left + " - " + score.right;
     });
 
+    socket.on('playerInRoom', function(info) {
+        roomIdDisplay.innerHTML = info.id;
+        playerOneDisplay.innerHTML = info.color + " player";
+        playerOneDisplay.style.color = info.color;
+    });
 })();
