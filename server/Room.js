@@ -11,20 +11,12 @@ class Room {
         this.rightPlayerFlag = false;
         this.gameEnded = true;
         this.paused = false;
+        this.playForScore = false;
+        this.nonScoreStarted = false;
     }
 
-    changePause() {
-        if (this.paused) {
-            this.paused = false;
-            if (this.fullFlag() && !this.gameEnded) {
-                this.moveBall();
-            }
-        } else {
-            this.paused = true;
-        }
-        console.log("room " + this.roomid + " paused " + this.paused);
-    }
 
+    //convert to send needed json
     updateObject() {
         var clients = {};
         for (var id in this.players) {
@@ -32,6 +24,8 @@ class Room {
         }
         return clients;
     }
+
+    //flag section here
 
     fullFlag() {
         if (this.rightPlayerFlag && this.leftPlayerFlag) {
@@ -41,14 +35,49 @@ class Room {
         }
     }
 
+    emptyFlag() {
+        if (!this.rightPlayerFlag && !this.leftPlayerFlag) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //end of flag section
+
+    //create section here
+
     addPlayer(socket) {
         if (!this.leftPlayerFlag) {
             this.addLeftPlayer(socket);
+
         } else {
             if (!this.rightPlayerFlag) {
                 this.addRightPlayer(socket);
             }
         }
+        if (!this.nonScoreStarted) {
+            this.startNonScoreGame();
+            this.nonScoreStarted = true;
+        }
+        if (this.fullFlag()) {
+            this.startScoreGame();
+        }
+
+    }
+
+    removePlayer(socket) {
+        delete this.players[socket.id];
+        if (socket.id == this.leftPlayer) {
+            this.leftPlayerFlag = false;
+        } else {
+            this.rightPlayerFlag = false;
+        }
+        if (!this.nonScoreStarted) {
+            this.startNonScoreGame();
+            this.nonScoreStarted = true;
+        }
+        this.updateAllForPlayers();
     }
 
     addLeftPlayer(socket) {
@@ -77,18 +106,52 @@ class Room {
 
     createBall() {
         this.ball = new Ball(this.field.width / 2, this.field.height / 2, 10, 3, 2, 1);
+        this.ball.setcolor("white");
     }
 
-    startGame() {
+    //end of create section
+
+    //game mode section here
+
+    startNonScoreGame() {
+        this.playForScore = false;
         this.gameEnded = false;
         this.createBall();
         this.moveBall();
     }
 
+    startScoreGame() {
+        this.setZeroScore();
+        this.playForScore = true;
+    }
+
+    setZeroScore() {
+        for (var id in this.players) {
+            this.players[id].score = 0;
+        }
+    }
+
+    changePause() {
+        if (this.paused) {
+            this.paused = false;
+            if (!this.gameEnded) {
+                this.moveBall();
+            }
+        } else {
+            this.paused = true;
+        }
+        console.log("room " + this.roomid + " paused " + this.paused);
+    }
+
+    //end of game mode section
+
+    //update section here
+
     updateBallForPlayers() {
         for (var id in this.players) {
             this.players[id].socket.emit('ball', this.ball);
         }
+        //console.log(this.ball);
     }
 
     updatePlayersForPlayers() {
@@ -102,11 +165,22 @@ class Room {
     updateScoreForPlayers() {
         for (var id in this.players) {
             this.players[id].socket.emit('score', {
-                left: this.players[this.leftPlayer].score,
-                right: this.players[this.rightPlayer].score
+                left: this.players[this.leftPlayer].score || 0,
+                right: this.players[this.rightPlayer].score || 0
             });
         }
     }
+
+    updateAllForPlayers() {
+        for (var id in this.players) {
+            this.players[id].socket.emit('update');
+        }
+    }
+
+    //end of update section
+
+    //move section here
+
 
     moveBall() {
         this.collisionDetection();
@@ -121,8 +195,11 @@ class Room {
         if (!this.gameEnded && !this.paused) {
             setTimeout(this.moveBall.bind(this), 10);
         } else {
-            if (this.gameEnded) {
+            if (this.gameEnded && this.playForScore) {
+                this.nonScoreStarted = false;
+
                 if (Math.max(this.players[this.leftPlayer].score, this.players[this.rightPlayer].score) == this.players[this.leftPlayer].score) {
+                    this.updateAllForPlayers();
                     var winner = this.players[this.leftPlayer].color;
                 } else {
                     var winner = this.players[this.rightPlayer].color;
@@ -133,20 +210,25 @@ class Room {
     }
 
     changeX() {
-        if (this.ball.x + this.ball.dx > this.field.width - this.ball.radius || this.ball.x + this.ball.dx < this.ball.radius) {
+        try {
+            if (this.ball.x + this.ball.dx > this.field.width - this.ball.radius || this.ball.x + this.ball.dx < this.ball.radius) {
 
-            if (this.ball.x + this.ball.dx > this.field.width - this.ball.radius) {
-                this.gameEnded = this.players[this.leftPlayer].increaseScoreAndCheckWinner();
-
-            } else {
-                if (this.ball.x + this.ball.dx < this.ball.radius) {
-                    this.gameEnded = this.players[this.rightPlayer].increaseScoreAndCheckWinner();
-
+                if (this.playForScore) {
+                    if (this.ball.x + this.ball.dx > this.field.width - this.ball.radius) {
+                        this.gameEnded = this.players[this.leftPlayer].increaseScoreAndCheckWinner();
+                    } else {
+                        if (this.ball.x + this.ball.dx < this.ball.radius) {
+                            this.gameEnded = this.players[this.rightPlayer].increaseScoreAndCheckWinner();
+                        }
+                    }
+                    this.updateScoreForPlayers();
                 }
+                this.ball.dx = -this.ball.dx;
+                //console.log("New score in " + this.roomid + " - " + this.players[this.leftPlayer].score + " : " + this.players[this.rightPlayer].score);
             }
-            this.ball.dx = -this.ball.dx;
-            this.updateScoreForPlayers();
-            //console.log("New score in " + this.roomid + " - " + this.players[this.leftPlayer].score + " : " + this.players[this.rightPlayer].score);
+        } catch (e) {
+            console.log("No data for player in room " + this.roomid);
+            this.playForScore = false;
         }
     }
 
@@ -175,10 +257,14 @@ class Room {
     playerMoved(socketID, x, y) {
 
         this.players[socketID].moveTo(x, y);
-
+        //this.collisionDetection();
         //console.log("someone moved");
         this.updatePlayersForPlayers();
     }
+
+
+    //end of move section
+
 
 }
 

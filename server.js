@@ -25,28 +25,46 @@ var playerToRoom = new Map();
 var lastroomID;
 var field = { width: 1000, height: 500 };
 
+function findFreeRoom() {
+    for (var id in rooms) {
+        if (!rooms[id].fullFlag()) {
+            lastroomID = rooms[id].roomid;
+        }
+    }
+}
+
 io.on('connection', function(socket) {
     socket.on('new player', function() {
 
+        findFreeRoom();
         if (lastroomID == null) {
             var roomid = uuid.v4();
             rooms[roomid] = new Room(roomid, field.width, field.height);
             lastroomID = roomid;
-            //console.log("created room 0");
+            rooms[lastroomID].addPlayer(socket);
+            playerToRoom.set(socket.id, lastroomID);
         } else {
-            if (rooms[lastroomID].fullFlag()) {
-                rooms[lastroomID].startGame();
-                console.log("Game started in room " + lastroomID);
-                var roomid = uuid.v4();
-                rooms[roomid] = new Room(roomid, field.width, field.height);
-                lastroomID = roomid;
-            }
+            //starts score game when second player added
+            rooms[lastroomID].addPlayer(socket);
+            playerToRoom.set(socket.id, lastroomID);
+            rooms[lastroomID].startScoreGame();
+            console.log("Game started in room " + lastroomID);
+            lastroomID = null;
         }
-        rooms[lastroomID].addPlayer(socket);
 
-        playerToRoom.set(socket.id, lastroomID);
+    });
 
+    socket.on('disconnect', function() {
+        if (playerToRoom.has(socket.id)) {
+            console.log(socket.id + " disconnected");
+            rooms[playerToRoom.get(socket.id)].removePlayer(socket);
+            if (rooms[playerToRoom.get(socket.id)].emptyFlag()) {
+                delete rooms[playerToRoom.get(socket.id)];
+                console.log("Deleted empty room " + playerToRoom.get(socket.id));
+            }
+            playerToRoom.delete(socket.id);
 
+        }
     });
 
     socket.on('movement', function(data) {
@@ -61,4 +79,6 @@ io.on('connection', function(socket) {
             rooms[playerToRoom.get(socket.id)].changePause();
         }
     });
+
+
 });

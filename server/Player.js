@@ -10,7 +10,7 @@ class Player {
         this.score = 0;
         this.maxScore = maxScore;
         this.maxX = maxX;
-        console.log(socket.id + " player constructed");
+        //console.log(socket.id + " player constructed");
     }
     setcolor(color) {
         this.color = color;

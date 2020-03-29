@@ -1,6 +1,6 @@
 class Ball {
-    constructor(x, y, radius, speed, dx, dy, fieldWidth, fieldHeight) {
-        console.log("Ball created");
+    constructor(x, y, radius, speed, dx, dy) {
+        // console.log("Ball created");
         this.x = x;
         this.y = y;
         this.lastx = x;
@@ -9,8 +9,6 @@ class Ball {
         this.speed = speed;
         this.dx = dx * speed;
         this.dy = dy * speed;
-        this.fieldWidth = fieldWidth;
-        this.fieldHeight = fieldHeight;
     }
     setcolor(color) {
         this.color = color;

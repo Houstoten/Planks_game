@@ -7,12 +7,6 @@
     var ctx = canvas.getContext("2d");
     var socket = io();
 
-    // $('#change_game_mode').click(function() {
-    //     $.fancybox([
-    //         { href: '#choose_mode' }
-    //     ]);
-    // });
-
     socket.emit('new player');
 
 
@@ -49,11 +43,10 @@
     }
 
 
-    // function redrawAll() {
-    //     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // }
+    function redrawAll() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
-    // setInterval(redrawAll, 1000);
 
     function drawPlatform(x, y, width, height, color) {
         ctx.beginPath();
@@ -93,5 +86,9 @@
         roomIdDisplay.innerHTML = info.id;
         playerOneDisplay.innerHTML = info.color + " player";
         playerOneDisplay.style.color = info.color;
+    });
+
+    socket.on('update', function() {
+        redrawAll();
     });
 })();
