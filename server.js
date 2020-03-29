@@ -28,15 +28,16 @@ var field = { width: 1000, height: 500 };
 function findFreeRoom() {
     for (var id in rooms) {
         if (!rooms[id].fullFlag()) {
-            lastroomID = rooms[id].roomid;
+            return rooms[id].roomid;
         }
     }
+    return null;
 }
 
 io.on('connection', function(socket) {
     socket.on('new player', function() {
 
-        findFreeRoom();
+        lastroomID = findFreeRoom();
         if (lastroomID == null) {
             var roomid = uuid.v4();
             rooms[roomid] = new Room(roomid, field.width, field.height);
