@@ -3,10 +3,11 @@ const Player = require('./Player');
 const Field = require('./Field');
 
 class Room {
-    constructor(roomid, width, height) {
+    constructor(roomid, width, height, privateFlag) {
         this.roomid = roomid;
         this.players = {};
         this.field = new Field(width, height);
+        this.privateFlag = privateFlag;
         this.leftPlayerFlag = false;
         this.rightPlayerFlag = false;
         this.gameEnded = true;
@@ -63,6 +64,8 @@ class Room {
         if (this.fullFlag()) {
             this.startScoreGame();
         }
+        this.updateAllDataForPlayers();
+
 
     }
 
@@ -77,7 +80,7 @@ class Room {
             this.startNonScoreGame();
             this.nonScoreStarted = true;
         }
-        this.updateAllForPlayers();
+        this.updateAllDataForPlayers();
     }
 
     addLeftPlayer(socket) {
@@ -121,6 +124,10 @@ class Room {
     }
 
     startScoreGame() {
+        if (!this.nonScoreStarted) {
+            this.startNonScoreGame();
+            this.nonScoreStartedc = true;
+        }
         this.setZeroScore();
         this.playForScore = true;
     }
@@ -145,6 +152,20 @@ class Room {
 
     //end of game mode section
 
+    findOutWinner() {
+        this.nonScoreStarted = false;
+        this.updateAllForPlayers();
+        if (this.players[this.leftPlayer].score > this.players[this.rightPlayer].score) {
+
+            var winner = this.players[this.leftPlayer].color;
+        } else {
+            if (this.players[this.leftPlayer].score < this.players[this.rightPlayer].score) {
+                var winner = this.players[this.rightPlayer].color;
+            }
+        }
+        console.log("Game ended in room " + this.roomid + " .Winner is " + winner + " player.");
+    }
+
     //update section here
 
     updateBallForPlayers() {
@@ -163,10 +184,18 @@ class Room {
     }
 
     updateScoreForPlayers() {
+        var scoreleft = 0;
+        var scoreright = 0;
+        if (this.leftPlayerFlag) {
+            scoreleft = this.players[this.leftPlayer].score;
+        }
+        if (this.rightPlayerFlag) {
+            scoreright = this.players[this.rightPlayer].score;
+        }
         for (var id in this.players) {
             this.players[id].socket.emit('score', {
-                left: this.players[this.leftPlayer].score || 0,
-                right: this.players[this.rightPlayer].score || 0
+                left: scoreleft,
+                right: scoreright
             });
         }
     }
@@ -175,6 +204,13 @@ class Room {
         for (var id in this.players) {
             this.players[id].socket.emit('update');
         }
+    }
+
+    updateAllDataForPlayers() {
+        this.updateAllForPlayers();
+        this.updateScoreForPlayers();
+        this.updatePlayersForPlayers();
+        this.updateBallForPlayers();
     }
 
     //end of update section
@@ -194,18 +230,6 @@ class Room {
         this.updateBallForPlayers();
         if (!this.gameEnded && !this.paused) {
             setTimeout(this.moveBall.bind(this), 10);
-        } else {
-            if (this.gameEnded && this.playForScore) {
-                this.nonScoreStarted = false;
-
-                if (Math.max(this.players[this.leftPlayer].score, this.players[this.rightPlayer].score) == this.players[this.leftPlayer].score) {
-                    this.updateAllForPlayers();
-                    var winner = this.players[this.leftPlayer].color;
-                } else {
-                    var winner = this.players[this.rightPlayer].color;
-                }
-                console.log("Game ended in room " + this.roomid + " .Winner is " + winner + " player.");
-            }
         }
     }
 
@@ -220,6 +244,9 @@ class Room {
                         if (this.ball.x + this.ball.dx < this.ball.radius) {
                             this.gameEnded = this.players[this.rightPlayer].increaseScoreAndCheckWinner();
                         }
+                    }
+                    if (this.gameEnded) {
+                        this.findOutWinner();
                     }
                     this.updateScoreForPlayers();
                 }

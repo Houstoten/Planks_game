@@ -14,6 +14,21 @@
     document.addEventListener("keydown", pausePressHandler, false);
     var movement = {};
 
+    document.getElementById("create_private").onclick = function() {
+        socket.emit('create_private');
+    };
+
+    document.getElementById("join_private").onclick = function() {
+        var id = document.getElementById("private_id").value;
+        if (id.length > 0) {
+            socket.emit('join_private', id);
+            console.log("id = " + id);
+        } else {
+            document.getElementById("private_id").value = "Enter id here first!";
+            document.getElementById("private_id").style.color = "red";
+        }
+    }
+
     function pausePressHandler(e) {
         if (e.keyCode == 32) {
             socket.emit('pause');

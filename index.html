@@ -49,13 +49,18 @@
         <table class="mode_choose_container" cellpadding="10">
             <tr>
                 <td align="center">
-                    <button type="button" id="quick_match">New quick match</button>
+                    <button type="button" id="create_private">New private room</button>
                 </td>
             </tr>
             <tr>
                 <td align="center">
-                    <button id="join_to_room">Join to existing room</button>
-                    <input id="new_room_id">
+                    <button type="button" id="join_private">Join to private room</button>
+                    <input type="text" id="private_id">
+                </td>
+            </tr>
+            <tr>
+                <td id="private_result" align="center">
+                    -
                 </td>
             </tr>
         </table>
