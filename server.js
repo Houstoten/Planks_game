@@ -26,6 +26,18 @@ var playerToRoom = new Map();
 var lastroomID;
 var field = { width: 1000, height: 500 };
 
+
+function createRoomID() {
+    var roomid = uuid.v4();
+    roomid = roomid.slice(0, 8);
+    playerToRoom.forEach(function(value, key, map) {
+        if (value == roomid) {
+            createRoomID();
+        }
+    });
+    return roomid;
+}
+
 function findFreeRoom() {
     for (var id in rooms) {
         if (!rooms[id].fullFlag() && !rooms[id].privateFlag) {
@@ -36,7 +48,7 @@ function findFreeRoom() {
 }
 
 function createNewRoomIfAllAreFull(socket) {
-    var roomid = uuid.v4();
+    var roomid = createRoomID();
     rooms[roomid] = new Room(roomid, field.width, field.height, false);
     lastroomID = roomid;
     rooms[lastroomID].addPlayer(socket);
@@ -77,7 +89,7 @@ io.on('connection', function(socket) {
 
     socket.on('create_private', function() {
         disconnectFromRoom(socket);
-        var roomid = uuid.v4();
+        var roomid = createRoomID();
         rooms[roomid] = new Room(roomid, field.width, field.height, true);
         rooms[roomid].addPlayer(socket);
         playerToRoom.set(socket.id, roomid);
