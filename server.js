@@ -30,12 +30,23 @@ var field = { width: 1000, height: 500 };
 function createRoomID() {
     var roomid = uuid.v4();
     roomid = roomid.slice(0, 8);
-    playerToRoom.forEach(function(value, key, map) {
-        if (value == roomid) {
-            createRoomID();
-        }
-    });
-    return roomid;
+    try {
+        //var iterator = playerToRoom.values();
+        var roomids = [...playerToRoom.values()];
+        roomids.forEach(function(value, i) {
+            if (value == roomid) {
+                createRoomID();
+            }
+            if (i == roomids.length - 1) {
+                throw "All rooms are full";
+            }
+        });
+    } catch (e) {
+        socket.emit('no_rooms');
+        roomid = null;
+    } finally {
+        return roomid;
+    }
 }
 
 function findFreeRoom() {
@@ -48,19 +59,30 @@ function findFreeRoom() {
 }
 
 function createNewRoomIfAllAreFull(socket) {
-    var roomid = createRoomID();
-    rooms[roomid] = new Room(roomid, field.width, field.height, false);
-    lastroomID = roomid;
-    rooms[lastroomID].addPlayer(socket);
-    playerToRoom.set(socket.id, lastroomID);
+    try {
+        var roomid = createRoomID();
+        if (roomid == null) {
+            return;
+        }
+        rooms[roomid] = new Room(roomid, field.width, field.height, false);
+        lastroomID = roomid;
+        rooms[lastroomID].addPlayer(socket);
+        playerToRoom.set(socket.id, lastroomID);
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 function joinToExistingQuickMatchRoom(socket) {
-    rooms[lastroomID].addPlayer(socket);
-    playerToRoom.set(socket.id, lastroomID);
-    rooms[lastroomID].startScoreGame();
-    console.log("Game started in room " + lastroomID);
-    lastroomID = null;
+    try {
+        rooms[lastroomID].addPlayer(socket);
+        playerToRoom.set(socket.id, lastroomID);
+        rooms[lastroomID].startScoreGame();
+        console.log("Game started in room " + lastroomID);
+        lastroomID = null;
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 function disconnectFromRoom(socket) {
@@ -90,6 +112,9 @@ io.on('connection', function(socket) {
     socket.on('create_private', function() {
         disconnectFromRoom(socket);
         var roomid = createRoomID();
+        if (roomid == null) {
+            return;
+        }
         rooms[roomid] = new Room(roomid, field.width, field.height, true);
         rooms[roomid].addPlayer(socket);
         playerToRoom.set(socket.id, roomid);

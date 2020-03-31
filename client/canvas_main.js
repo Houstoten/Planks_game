@@ -106,4 +106,8 @@
     socket.on('update', function() {
         redrawAll();
     });
+
+    socket.on('no_rooms', function() {
+        alert("No rooms avaliable right now, reconnect later");
+    });
 })();
