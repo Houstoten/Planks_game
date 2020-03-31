@@ -42,7 +42,7 @@ function createRoomID() {
             }
         });
     } catch (e) {
-        socket.emit('no_rooms');
+        socket.emit('error', e);
         roomid = null;
     } finally {
         return roomid;
@@ -69,7 +69,7 @@ function createNewRoomIfAllAreFull(socket) {
         rooms[lastroomID].addPlayer(socket);
         playerToRoom.set(socket.id, lastroomID);
     } catch (e) {
-        console.log(e);
+        socket.emit('error', e);
     }
 }
 
@@ -77,11 +77,11 @@ function joinToExistingQuickMatchRoom(socket) {
     try {
         rooms[lastroomID].addPlayer(socket);
         playerToRoom.set(socket.id, lastroomID);
-        rooms[lastroomID].startScoreGame();
-        console.log("Game started in room " + lastroomID);
+        // rooms[lastroomID].startScoreGame();
+        //console.log("Game started in room " + lastroomID);
         lastroomID = null;
     } catch (e) {
-        console.log(e);
+        socket.emit('error', e);
     }
 }
 
@@ -100,6 +100,7 @@ function disconnectFromRoom(socket) {
 io.on('connection', function(socket) {
 
     socket.on('new player', function() {
+
         lastroomID = findFreeRoom();
         if (lastroomID == null) {
             createNewRoomIfAllAreFull(socket);
@@ -124,8 +125,8 @@ io.on('connection', function(socket) {
         disconnectFromRoom(socket);
         rooms[id].addPlayer(socket);
         playerToRoom.set(socket.id, id);
-        rooms[id].startScoreGame();
-        console.log("Game started in private room " + id);
+        //rooms[id].startScoreGame();
+        //console.log("Game started in private room " + id);
     });
 
     socket.on('disconnect', function() {
@@ -141,7 +142,14 @@ io.on('connection', function(socket) {
 
     socket.on('pause', function() {
         if (playerToRoom.has(socket.id)) {
-            rooms[playerToRoom.get(socket.id)].changePause();
+            rooms[playerToRoom.get(socket.id)].requestPause(socket.id);
+        }
+    });
+
+    socket.on('start_score', function() {
+        if (playerToRoom.has(socket.id)) {
+            //  console.log("In sockets score" + socket.id);
+            rooms[playerToRoom.get(socket.id)].requestScoreGame(socket.id);
         }
     });
 

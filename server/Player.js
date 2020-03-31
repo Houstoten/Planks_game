@@ -1,5 +1,5 @@
 class Player {
-    constructor(x, y, width, height, socket, maxScore, maxX) {
+    constructor(x, y, width, height, socket, maxScore, maxX, defaultPaused) {
         this.x = x;
         this.y = y;
         this.lastx = x;
@@ -10,6 +10,8 @@ class Player {
         this.score = 0;
         this.maxScore = maxScore;
         this.maxX = maxX;
+        this.wantedScoreGame = false;
+        this.wantedPause = defaultPaused;
         //console.log(socket.id + " player constructed");
     }
     setcolor(color) {

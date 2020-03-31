@@ -61,9 +61,9 @@ class Room {
             this.startNonScoreGame();
             this.nonScoreStarted = true;
         }
-        if (this.fullFlag()) {
-            this.startScoreGame();
-        }
+        // if (this.fullFlag()) {
+        //     this.startScoreGame();
+        // }
         this.updateAllDataForPlayers();
 
 
@@ -84,7 +84,7 @@ class Room {
     }
 
     addLeftPlayer(socket) {
-        this.players[socket.id] = new Player(this.field.width / 3, this.field.height / 2, 10, 100, socket, 10, this.field.width / 2);
+        this.players[socket.id] = new Player(this.field.width / 3, this.field.height / 2, 10, 100, socket, 10, this.field.width / 2, this.paused);
         this.players[socket.id].setcolor("blue");
         this.leftPlayer = socket.id;
         this.leftPlayerFlag = true;
@@ -96,7 +96,7 @@ class Room {
     }
 
     addRightPlayer(socket) {
-        this.players[socket.id] = new Player(this.field.width * 2 / 3, this.field.height / 2, 10, 100, socket, 10, -this.field.width / 2);
+        this.players[socket.id] = new Player(this.field.width * 2 / 3, this.field.height / 2, 10, 100, socket, 10, -this.field.width / 2, this.paused);
         this.players[socket.id].setcolor("red");
         this.rightPlayer = socket.id;
         this.rightPlayerFlag = true;
@@ -121,16 +121,52 @@ class Room {
         this.gameEnded = false;
         this.createBall();
         this.moveBall();
+        this.ballIsMoving = true;
     }
 
     startScoreGame() {
+
         if (!this.nonScoreStarted) {
             this.startNonScoreGame();
-            this.nonScoreStartedc = true;
+            this.nonScoreStarted = true;
         }
         this.setZeroScore();
         this.playForScore = true;
+        this.updateAllDataForPlayers();
+        this.sendConfirmationToPlayers(this.allTruePredicate, "Score Game Started!");
     }
+
+    requestScoreGame(socketID) {
+        if (this.fullFlag()) {
+            // console.log("In request score " + socketID);
+            this.players[socketID].wantedScoreGame = true;
+            if (this.allWantedScoreGame()) {
+                this.startScoreGame();
+                for (var id in this.players) {
+
+                    this.players[id].wantedScoreGame = null;
+                }
+                // console.log("now all is null!!!!!!!!!!!!!!!!!");
+            }
+        } else {
+            this.throwErrorForPlayers("Wait for all players to join");
+        }
+    }
+
+
+    allWantedScoreGame() {
+        //   console.log("all Wanted Score here");
+        for (var id in this.players) {
+            if (!this.players[id].wantedScoreGame) {
+                this.sendConfirmationToPlayers(this.scoreGamePredicate, "Your opponent wants to start score game.")
+                    //  console.log("all Wanted returns false");
+                return false;
+            }
+        }
+        //console.log("all Wanted returns true");
+        return true;
+    }
+
 
     setZeroScore() {
         for (var id in this.players) {
@@ -150,6 +186,58 @@ class Room {
         console.log("room " + this.roomid + " paused " + this.paused);
     }
 
+    requestPause(socketID) {
+        if (this.players[socketID].wantedPause) {
+            console.log(socketID + " wants to unpause");
+            this.players[socketID].wantedPause = false;
+        } else {
+            console.log(socketID + " wants to pause");
+            this.players[socketID].wantedPause = true;
+        }
+        if (this.allWantedPause()) {
+            this.changePause();
+        }
+    }
+
+    allWantedPause() {
+        for (var id in this.players) {
+            if (this.players[id].wantedPause == this.paused) {
+                if (this.paused == true) {
+                    this.sendConfirmationToPlayers(this.pausePredicate.bind(this), "Your opponent wants to unpause.");
+                } else {
+                    this.sendConfirmationToPlayers(this.pausePredicate.bind(this), "Your opponent wants to pause.");
+                } //  console.log("all Wanted returns false");
+                return false;
+            }
+        }
+        //console.log("all Wanted returns true");
+        return true;
+    }
+
+    pausePredicate(player) {
+        console.log(player.socket.id + " " + player.wantedPause + " " + this.paused);
+        if (player instanceof Player && player.wantedPause == this.paused) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    scoreGamePredicate(player) {
+        //  console.log("Predicate here");
+        if (player instanceof Player && !player.wantedScoreGame) {
+            //  console.log("Predicate true for " + player.socket.id);
+            return true;
+        } else {
+            // console.log("Predicate false for " + player.socket.id);
+            return false;
+        }
+    }
+
+    allTruePredicate(player) {
+        return true;
+    }
+
     //end of game mode section
 
     findOutWinner() {
@@ -163,10 +251,28 @@ class Room {
                 var winner = this.players[this.rightPlayer].color;
             }
         }
+        this.sendConfirmationToPlayers(this.allTruePredicate, "Score Game Ended! " + winner + " player is winner!");
         console.log("Game ended in room " + this.roomid + " .Winner is " + winner + " player.");
+
     }
 
     //update section here
+
+    sendConfirmationToPlayers(predicate, letter) {
+        // console.log("Confirmation Sending Here");
+        for (var id in this.players) {
+            if (predicate(this.players[id])) {
+                //   console.log("sending confirmation to " + this.players[id].socket.id);
+                this.players[id].socket.emit('confirm', letter);
+            }
+        }
+    }
+
+    throwErrorForPlayers(error) {
+        for (var id in this.players) {
+            this.players[id].socket.emit('eror', error);
+        }
+    }
 
     updateBallForPlayers() {
         for (var id in this.players) {
@@ -229,7 +335,11 @@ class Room {
         this.ball.y += this.ball.dy;
         this.updateBallForPlayers();
         if (!this.gameEnded && !this.paused) {
+
             setTimeout(this.moveBall.bind(this), 10);
+        } else {
+            this.startNonScoreGame();
+            this.updateAllForPlayers();
         }
     }
 
@@ -254,7 +364,8 @@ class Room {
                 //console.log("New score in " + this.roomid + " - " + this.players[this.leftPlayer].score + " : " + this.players[this.rightPlayer].score);
             }
         } catch (e) {
-            console.log("No data for player in room " + this.roomid);
+            // this.throwErrorForPlayers("No data for player in room");
+            // console.log("No data for player in room " + this.roomid);
             this.playForScore = false;
         }
     }

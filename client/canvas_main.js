@@ -27,7 +27,13 @@
             document.getElementById("private_id").value = "Enter id here first!";
             document.getElementById("private_id").style.color = "red";
         }
-    }
+    };
+
+    document.getElementById("start_score").onclick = function() {
+        console.log("sending from pressing");
+        document.getElementById("start_score").blur();
+        socket.emit('start_score');
+    };
 
     function pausePressHandler(e) {
         if (e.keyCode == 32) {
@@ -107,7 +113,12 @@
         redrawAll();
     });
 
-    socket.on('no_rooms', function() {
-        alert("No rooms avaliable right now, reconnect later");
+    socket.on('eror', function(error) {
+        alert(error);
+    });
+
+    socket.on('confirm', function(info) {
+        //console.log("confirmation here");
+        alert(info);
     });
 })();
