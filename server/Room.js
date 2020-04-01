@@ -336,10 +336,12 @@ class Room {
         this.updateBallForPlayers();
         if (!this.gameEnded && !this.paused) {
 
-            setTimeout(this.moveBall.bind(this), 10);
+            setTimeout(this.moveBall.bind(this), 100 / 6);
         } else {
-            this.startNonScoreGame();
-            this.updateAllForPlayers();
+            if (this.gameEnded) {
+                this.startNonScoreGame();
+                this.updateAllForPlayers();
+            }
         }
     }
 
@@ -395,7 +397,7 @@ class Room {
     playerMoved(socketID, x, y) {
 
         this.players[socketID].moveTo(x, y);
-        //this.collisionDetection();
+        this.collisionDetection();
         //console.log("someone moved");
         this.updatePlayersForPlayers();
     }
