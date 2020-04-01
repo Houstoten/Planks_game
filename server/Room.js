@@ -108,7 +108,7 @@ class Room {
     }
 
     createBall() {
-        this.ball = new Ball(this.field.width / 2, this.field.height / 2, 10, 6, 2, 1);
+        this.ball = new Ball(this.field.width / 2, this.field.height / 2, 10, 5, 2, 1);
         this.ball.setcolor("white");
     }
 
@@ -337,7 +337,7 @@ class Room {
         this.updateBallForPlayers();
         if (!this.gameEnded && !this.paused) {
 
-            setTimeout(this.moveBall.bind(this), 100 / 4);
+            setTimeout(this.moveBall.bind(this), 100 / 5);
         } else {
             if (this.gameEnded) {
                 this.startNonScoreGame();
