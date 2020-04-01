@@ -325,7 +325,7 @@ class Room {
 
 
     moveBall() {
-        this.collisionDetection();
+
         //console.log("hi");
         this.changeX();
         this.changeY();
@@ -333,6 +333,7 @@ class Room {
         this.ball.lasty = this.ball.y;
         this.ball.x += this.ball.dx;
         this.ball.y += this.ball.dy;
+        this.collisionDetection();
         this.updateBallForPlayers();
         if (!this.gameEnded && !this.paused) {
 
