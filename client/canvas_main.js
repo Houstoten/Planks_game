@@ -7,6 +7,8 @@
     var ctx = canvas.getContext("2d");
     var socket = io();
 
+
+
     socket.emit('new player');
 
 
@@ -85,6 +87,15 @@
         ctx.closePath();
     }
 
+    function showDialog(text) {
+        document.getElementById("dialog_text").innerHTML = text;
+        document.querySelector('dialog').show();
+        setTimeout(function() {
+            document.querySelector('dialog').close();
+            document.getElementById("dialog_text").innerHTML = "-";
+        }, 5000);
+    }
+
     socket.on('ball', function(ball) {
         redraw(ball.lastx - ball.radius, ball.lasty - ball.radius, ball.radius * 2, ball.radius * 2);
         drawBall(ball.x, ball.y, ball.radius, ball.color);
@@ -114,11 +125,12 @@
     });
 
     socket.on('eror', function(error) {
-        alert(error);
+        showDialog(error);
     });
 
     socket.on('confirm', function(info) {
         //console.log("confirmation here");
-        alert(info);
+        //alert(info);
+        showDialog(info);
     });
 })();

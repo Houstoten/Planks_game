@@ -9,6 +9,7 @@ class Ball {
         this.speed = speed;
         this.dx = dx * speed;
         this.dy = dy * speed;
+        this.moving = false;
     }
     setcolor(color) {
         this.color = color;

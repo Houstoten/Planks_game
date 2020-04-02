@@ -121,7 +121,7 @@ class Room {
         this.gameEnded = false;
         this.createBall();
         this.moveBall();
-        this.ballIsMoving = true;
+        this.ball.moving = true;
     }
 
     startScoreGame() {
@@ -132,6 +132,8 @@ class Room {
         }
         this.setZeroScore();
         this.playForScore = true;
+        this.ball.x = this.field.width / 2;
+        this.ball.y = this.field.height / 2;
         this.updateAllDataForPlayers();
         this.sendConfirmationToPlayers(this.allTruePredicate, "Score Game Started!");
     }
@@ -177,7 +179,7 @@ class Room {
     changePause() {
         if (this.paused) {
             this.paused = false;
-            if (!this.gameEnded) {
+            if (!this.ball.moving) {
                 this.moveBall();
             }
         } else {
@@ -187,12 +189,14 @@ class Room {
     }
 
     requestPause(socketID) {
-        if (this.players[socketID].wantedPause) {
-            console.log(socketID + " wants to unpause");
+        if (this.players[socketID].wantedPause && this.paused) {
+            // console.log(socketID + " wants to unpause");
             this.players[socketID].wantedPause = false;
         } else {
-            console.log(socketID + " wants to pause");
-            this.players[socketID].wantedPause = true;
+            if (!this.players[socketID].wantedPause && !this.paused) {
+                //  console.log(socketID + " wants to pause");
+                this.players[socketID].wantedPause = true;
+            }
         }
         if (this.allWantedPause()) {
             this.changePause();
@@ -215,7 +219,7 @@ class Room {
     }
 
     pausePredicate(player) {
-        console.log(player.socket.id + " " + player.wantedPause + " " + this.paused);
+        //   console.log(player.socket.id + " " + player.wantedPause + " " + this.paused);
         if (player instanceof Player && player.wantedPause == this.paused) {
             return true;
         } else {
@@ -241,7 +245,6 @@ class Room {
     //end of game mode section
 
     findOutWinner() {
-        this.nonScoreStarted = false;
         this.updateAllForPlayers();
         if (this.players[this.leftPlayer].score > this.players[this.rightPlayer].score) {
 
@@ -335,15 +338,17 @@ class Room {
         this.ball.y += this.ball.dy;
         this.collisionDetection();
         this.updateBallForPlayers();
-        if (!this.gameEnded && !this.paused) {
-
+        if (this.gameEnded) {
+            this.updateAllForPlayers();
+            this.gameEnded = false;
+            this.playForScore = false;
+        }
+        if (!this.paused) {
             setTimeout(this.moveBall.bind(this), 100 / 5);
         } else {
-            if (this.gameEnded) {
-                this.startNonScoreGame();
-                this.updateAllForPlayers();
-            }
+            this.ball.moving = false;
         }
+
     }
 
     changeX() {
