@@ -7,7 +7,7 @@ var server = http.Server(app);
 var io = socketIO(server);
 var uuid = require('./node_modules/uuid');
 const PORT = process.env.PORT || 5000;
-
+const https = require('https');
 const Room = require('./server/Room');
 
 app.set('port', 5000);
@@ -26,6 +26,12 @@ var playerToRoom = new Map();
 
 var lastroomID;
 var field = { width: 1000, height: 500 };
+
+setInterval(function() {
+    https.get('https://planks-n-ball.herokuapp.com', function() {
+        console.log("Calling Mommy");
+    });
+}, 100000);
 
 
 function createRoomID() {
