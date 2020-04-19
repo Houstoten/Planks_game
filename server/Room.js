@@ -19,11 +19,11 @@ class Room {
 
     //convert to send needed json
     updateObject() {
-        var clients = {};
+        var clients = [];
         for (var id in this.players) {
-            clients[id] = this.players[id].objectToSend();
+            clients.push(this.players[id].objectToSend());
         }
-        return clients;
+        return JSON.stringify(clients);
     }
 
     //flag section here

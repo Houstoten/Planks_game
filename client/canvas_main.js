@@ -102,9 +102,9 @@
     });
 
     socket.on('state', function(players) {
-        for (var id in players) {
-            var player = players[id];
-            console.log("Drawing player " + id);
+        var playersState = JSON.parse(players);
+        for (var id in playersState) {
+            var player = playersState[id];
             redraw(player.lastx, player.lasty, player.width, player.height);
             drawPlatform(player.x, player.y, player.width, player.height, player.color);
         }
