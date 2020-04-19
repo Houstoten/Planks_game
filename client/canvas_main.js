@@ -12,7 +12,6 @@
     socket.emit('new player');
 
 
-    document.addEventListener("mousemove", mouseMoveHandler, false);
     document.addEventListener("keydown", pausePressHandler, false);
     var movement = {};
 
@@ -43,12 +42,10 @@
         }
     }
 
-    function mouseMoveHandler(e) {
-
-        movement.x = e.clientX;
-        movement.y = e.clientY;
+    canvas.onmousemove = function(e) {
+        movement.x = e.offsetX;
+        movement.y = e.offsetY;
         socket.emit('movement', movement);
-        //collisionDetection();
     }
 
     resizeCanvas();
