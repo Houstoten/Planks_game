@@ -1,17 +1,10 @@
 # Planks_game
 Socket MultiRoom Planks Game
 
+Have a fun, android version is coming soon:)
+
 To run, install Node.js.
 Do in root folder
-
-npm init
-
-npm install --save express socket.io
-
-npm install uuid
-
-
-Do to run server
 
 node server.js
 
